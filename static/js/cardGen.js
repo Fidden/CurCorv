@@ -1,40 +1,47 @@
-function cardGen(currency) {
-	return `<div">
-                    <div class="card">
-                        <p class="card__tittle">${currency.Name}</p>
-                        <div class="change-container" >
-                            <p class="inc form" > 1 ${
-															currency.CharCode
-														}<span class="diff-amount">
-                                    (${(
-																			currency.Value - currency.Previous
-																		).toFixed(2)}) 
-                                    </span>
-                            <div class="separate"></div></p>
-                            <p class="to">${currency.Value.toFixed(2)} RUB</p>
-                        </div>
+const cards = document.querySelector(".cards");
+
+function CurrencyCardDiff(diffAmount) {
+    // get arrow icon;
+    const arrow = diffAmount < 0
+        ? `<i class="fa fa-arrow-down" aria-hidden="true"></i>`
+        : `<i class="fa fa-arrow-up" aria-hidden="true"></i>`;
+
+    //generate class to display price increment / decrement;
+    let className = 'diff-amount';
+    diffAmount < 0 ? className += " red" : className += " green";
+
+    // return element to display on page;
+    return `<span class="${className}">
+        ${arrow} (${diffAmount})
+    </span>`
+}
+
+function CurrencyCard(currency) {
+    // get currency difference
+    const diff = (currency.Value - currency.Previous).toFixed(2);
+    return `<div">
+                <div class="card">
+                    <p class="card__tittle">${currency.Name}</p>
+                    <div class="change-container" >
+                        <p class="inc form" > 1 ${currency.CharCode}
+                            ${CurrencyCardDiff(diff)}
+                        <div class="separate"></div></p>
+                        <p class="to">${currency.Value.toFixed(2)} RUB</p>
                     </div>
+                </div>
             </div>`;
 }
 
-async function getCurrencies() {
-	const res = await fetch("https://www.cbr-xml-daily.ru/daily_json.js");
-	const cards = await document.querySelector(".cards");
-	res.json().then((data) => {
-		for (let key in data.Valute) {
-			cards.innerHTML += cardGen(data.Valute[key]);
-		}
-
-		cards.childNodes.forEach(function (i) {
-			let diffAmount = i.querySelector(".diff-amount");
-			diffAmountNumber = Number(diffAmount.textContent.trim().slice(1, 5));
-			if (diffAmountNumber <= 0) {
-				diffAmount.parentElement.classList.add("red");
-				diffAmount.parentElement.innerHTML += `<i class="fa fa-arrow-down" aria-hidden="true"></i>`;
-			} else {
-				diffAmount.parentElement.innerHTML += `<i class="fa fa-arrow-up" aria-hidden="true"></i>`;
-			}
-		});
-	});
+function generateCards(cardsData) {
+    for (let key in cardsData.Valute) {
+        cards.innerHTML += CurrencyCard(cardsData.Valute[key]);
+    }
 }
+
+async function getCurrencies() {
+    const res = await fetch("https://www.cbr-xml-daily.ru/daily_json.js");
+    const json = await res.json();
+    generateCards(json);
+}
+
 getCurrencies();
